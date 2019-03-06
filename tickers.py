@@ -1,17 +1,29 @@
 import requests
-import iex
+from iex import reference
+import pandas as pd
+from io import StringIO
+import sys
 
 
-def save_tickers(n, file='tickers.txt'):
+def is_valid(tickers):
+    s = set(reference.symbols()['symbol'])
+    return [t.upper() in s for t in tickers]
+
+
+def save_tickers(n, filename='tickers.txt'):
     url = r'https://www.nasdaq.com/screening/companies-by-industry.aspx?exchange=NASDAQ&render=download'
-    size = 0
-    data = requests.get(url,  allow_redirects=True)
-    with open(file, 'wb') as f:
-        while size < n:
-            ticker =
-            if iex.
-            f.write(data.content)
+    data = requests.get(url, allow_redirects=True)
+    # read csv from a string
+    df = pd.read_csv(StringIO(data.text))
+    # filter out tickers which are valid and send to a file
+    print('\n'.join(df[is_valid(df['Symbol'])].loc[:n-1, 'Symbol']),
+          file=open(filename, 'w'))
 
 
 if __name__ == "__main__":
-    save_tickers(5)
+    try:
+        n = int(sys.argv[1])
+        filename = sys.argv[2]
+        save_tickers(n, filename)
+    except IndexError as e:
+        print('Format:\n $ python tickers.py <number of tickers> <ticker file name>')
