@@ -1,5 +1,4 @@
 import requests
-import iex
 import pandas as pd
 import sys
 
@@ -15,7 +14,14 @@ def get_data_at(filename, ticker, query_time, verbose=False):
         print(f'Columns: {", ".join(data.columns)}')
 
 
+class InvalidArgumentsException(Exception):
+    pass
+
+
 if __name__ == "__main__":
+    if len(sys.argv) < 9:
+        raise InvalidArgumentsException(
+            'Invalid format\n\nProper format is \n>>> python3 query.py –verbose True/False –file info_filename –ticker ticker –time time')
     verbose = sys.argv[sys.argv.index('-verbose') + 1] == 'True'
     filename = sys.argv[sys.argv.index('-file') + 1]
     ticker = sys.argv[sys.argv.index('-ticker') + 1]
