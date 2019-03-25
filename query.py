@@ -16,8 +16,8 @@ def get_data_at(filename, ticker, query_time, verbose=False):
 
 
 if __name__ == "__main__":
-    verbose = sys.argv[1] == '-verbose' or sys.argv[1] == '-v'
-    qtime = sys.argv[2]
-    filename = sys.argv[3]
-    ticker = sys.argv[4]
+    verbose = sys.argv[sys.argv.index('-verbose') + 1] == 'True'
+    filename = sys.argv[sys.argv.index('-file') + 1]
+    ticker = sys.argv[sys.argv.index('-ticker') + 1]
+    qtime = sys.argv[sys.argv.index('-time') + 1]
     get_data_at(filename, ticker, qtime, verbose)
