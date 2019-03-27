@@ -7,7 +7,9 @@ from iex import Stock
 
 #For some reason the Stock(ticker).quote() function outputs to the screen
 def update_info(ticker, f):
-    #Gets quote data for specific ticker and writes to output file
+    """
+    Gets quote data for specific ticker and writes to output file in a csv format
+    """
     stock = Stock(ticker).quote()
     currentDT = datetime.datetime.now()
     args = [str(currentDT.hour) + ':' + str(currentDT.minute), stock['symbol'], stock['latestPrice'], stock['latestVolume'], stock['close'], stock['open'], stock['low'], stock['high']]
@@ -15,7 +17,10 @@ def update_info(ticker, f):
     f.write('\n')
     
 def call_update(filename='info.csv'):
-    #Opens output file and calls update_info() for each ticker than it gets from the tickers.txt
+    """
+    Opens output file and calls update_info() for each ticker than it gets from the tickers.txt
+    Outputs the data to the use specified output file in csv format
+    """
     tickers_obj = open(sys.argv[2])
     content = tickers_obj.readlines()
     content = [x.strip() for x in content]
