@@ -13,6 +13,12 @@ def time_to_int(t):
     return int(h) * 3600 + int(m) * 60
 
 
+def int_to_time(i):
+    m = (i % 3600) // 60
+    h = (i - m) // 3600
+    return f'{h:02}:{m:02}'
+
+
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days)):
         yield start_date + dt.timedelta(n)
@@ -44,39 +50,41 @@ def grab_info(ticker, col, infile):
     return data
 
 
-def create_model(data, col):
-    return model.LinearRegression().fit(data[0].reshape(-1, 1), data[1].reshape(-1, 1))
+def create_model(xs, ys):
+    return model.LinearRegression().fit(xs.reshape(-1, 1), ys.reshape(-1, 1))
 
 
-def graph_data(data, predicted, coefs, graphfile):
-    plt.style.use("fivethirtyeight")
+def graph_data(x, y, px, py, coefs, graphfile, col):
+    plt.style.use("ggplot")
     plt.grid(False)
-    fig = plt.figure(1)
+    fig = plt.figure(1, figsize=(20, 10))
     ax = plt.subplot(111)
-    ax.scatter(data[0], data[1], color='r')
-    ax.scatter(predicted[0], predicted[1], color='b')
-    m, b = coefs
-    total_x = list(data[:, 0]) + list(predicted[:, 0])
-    print(total_x)
 
-    def f(x):
-        return (m * x) + b
-    total_y = list(map(f, total_x))
-    print(total_y)
-    ax.plot(total_x, total_y)
+    time_x = list(map(int_to_time, x))
+    time_px = list(map(int_to_time, px))
+
+    ax.scatter(time_x, y, c='r')
+    ax.scatter(time_px, py, c='b')
+    m, b = coefs
+    total_x = x + px
+    time_x = list(map(int_to_time, total_x))
+    total_y = list(map(lambda x: m*x + b, total_x))
+    # ax.plot(time_x, total_y)
+    plt.xlabel('Time')
+    plt.ylabel(col)
+    plt.gcf().subplots_adjust(bottom=0.15, left=0.15)
     plt.savefig(graphfile)
 
 
 def model_and_graph(ticker, col, infile, graphfile, t):
-    data = grab_info(ticker, col, infile).to_numpy()
-    m = create_model(data, col)
+    data = grab_info(ticker, col, infile)
+    xs, ys = data['Time'].to_numpy(), data[col].to_numpy()
+    m = create_model(xs, ys)
     last_minute = time_to_int('18:05')
-    next_t_minutes = np.array(range(last_minute+1, last_minute+t+1))
+    px = np.array(range(last_minute+1, last_minute+(t*60)+1))
     coefs = (float(m.coef_), float(m.intercept_))
-    print(next_t_minutes)
-    predicted = m.predict(next_t_minutes.reshape(-1, 1)).flatten()
-    predicted = np.array([next_t_minutes, predicted], np.float32).transpose()
-    graph_data(data, predicted, coefs, graphfile)
+    py = m.predict(px.reshape(-1, 1)).flatten()
+    graph_data(list(xs), list(ys), list(px), list(py), coefs, graphfile, col)
 
 
 if __name__ == "__main__":
