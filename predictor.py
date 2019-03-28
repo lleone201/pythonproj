@@ -6,6 +6,7 @@ import time
 import iex
 import datetime as dt
 from matplotlib import style
+import sys
 
 
 def time_to_int(t):
@@ -54,24 +55,22 @@ def create_model(xs, ys):
     return model.LinearRegression().fit(xs.reshape(-1, 1), ys.reshape(-1, 1))
 
 
-def graph_data(x, y, px, py, coefs, graphfile, col):
+def graph_data(x, y, px, py, graphfile, col):
     plt.style.use("ggplot")
-    plt.grid(False)
-    fig = plt.figure(1, figsize=(20, 10))
+    fig = plt.figure(1, figsize=(10, 5))
     ax = plt.subplot(111)
 
     time_x = list(map(int_to_time, x))
     time_px = list(map(int_to_time, px))
 
-    ax.scatter(time_x, y, c='r')
-    ax.scatter(time_px, py, c='b')
-    m, b = coefs
+    ax.scatter(time_x, y, c='r', label='Real data')
+    ax.scatter(time_px, py, c='b', label='Predicted data')
     total_x = x + px
     time_x = list(map(int_to_time, total_x))
-    total_y = list(map(lambda x: m*x + b, total_x))
-    # ax.plot(time_x, total_y)
     plt.xlabel('Time')
     plt.ylabel(col)
+    plt.title(f'Time vs {col}')
+    plt.legend()
     plt.gcf().subplots_adjust(bottom=0.15, left=0.15)
     plt.savefig(graphfile)
 
@@ -81,11 +80,15 @@ def model_and_graph(ticker, col, infile, graphfile, t):
     xs, ys = data['Time'].to_numpy(), data[col].to_numpy()
     m = create_model(xs, ys)
     last_minute = time_to_int('18:05')
-    px = np.array(range(last_minute+1, last_minute+(t*60)+1))
-    coefs = (float(m.coef_), float(m.intercept_))
+    px = np.array(range(last_minute+60, last_minute+(t*60)+60, 60))
     py = m.predict(px.reshape(-1, 1)).flatten()
-    graph_data(list(xs), list(ys), list(px), list(py), coefs, graphfile, col)
+    graph_data(list(xs), list(ys), list(px), list(py), graphfile, col)
 
 
 if __name__ == "__main__":
-    model_and_graph('AAPL', 'latestPrice', 'test.csv', 'graph.png', 3)
+    ticker = sys.argv[1]
+    info_file = sys.argv[2]
+    graph_file = sys.argv[3]
+    col = sys.argv[4]
+    t = int(sys.argv[5])
+    model_and_graph(ticker, col, info_file, graph_file, t)
